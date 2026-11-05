@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Filterbot</title>
+    <meta
+      name="description"
+      content="Filterbot — бот для автомодерації українських телеґрам-чатів: опис усіх функцій і команд."
+    />
+    <style>
+/* Кольори беруться з теми Telegram (--tg-theme-*), поза Telegram — запасні значення */
+:root {
+  --bg: var(--tg-theme-secondary-bg-color, #f1f3f6);
+  --surface: var(--tg-theme-section-bg-color, var(--tg-theme-bg-color, #ffffff));
+  --surface-2: rgba(36, 129, 204, 0.07);
+  --text: var(--tg-theme-text-color, #111418);
+  --hint: var(--tg-theme-hint-color, #7d8590);
+  --link: var(--tg-theme-link-color, #2481cc);
+  --accent: var(--tg-theme-accent-text-color, var(--tg-theme-link-color, #2481cc));
+  --button: var(--tg-theme-button-color, #2481cc);
+  --button-text: var(--tg-theme-button-text-color, #ffffff);
+  --border: rgba(127, 127, 127, 0.18);
+  --on: #2e9e5b;
+  --off: #8a8f98;
+  --radius: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: var(--tg-theme-secondary-bg-color, #0f1419);
+    --surface: var(--tg-theme-section-bg-color, var(--tg-theme-bg-color, #1a2129));
+    --surface-2: rgba(100, 181, 246, 0.08);
+    --text: var(--tg-theme-text-color, #e9edf1);
+    --hint: var(--tg-theme-hint-color, #8b98a5);
+    --link: var(--tg-theme-link-color, #64b5f6);
+    --accent: var(--tg-theme-accent-text-color, var(--tg-theme-link-color, #64b5f6));
+    --button: var(--tg-theme-button-color, #3e8fd6);
+    --border: rgba(255, 255, 255, 0.1);
+    --on: #4cc27f;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 120px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  margin: 0;
+  padding: 0 16px 32px;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.55;
+  font-size: 15px;
+  -webkit-text-size-adjust: 100%;
+}
+
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.88em;
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  background: var(--surface-2);
+  padding: 10px 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 6px 0 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* ───── Шапка ───── */
+.hero {
+  text-align: center;
+  padding: 32px 0 20px;
+}
+.hero-img {
+  width: 60%;
+  max-width: 300px;
+  height: auto;
+  aspect-ratio: 780 / 436;
+  object-fit: contain;
+}
+.hero-name {
+  font-size: 1.9em;
+  margin: 12px 0 0;
+  font-weight: 700;
+}
+.hero-tag {
+  margin: 0;
+  color: var(--hint);
+}
+.hero-lead {
+  margin: 14px auto 18px;
+  max-width: 460px;
+}
+.hero-actions,
+.footer {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--link);
+  font-weight: 600;
+  border: 1px solid var(--border);
+}
+.btn:hover {
+  text-decoration: none;
+  filter: brightness(0.97);
+}
+.btn-primary {
+  background: var(--button);
+  color: var(--button-text);
+  border-color: transparent;
+}
+
+/* ───── Навігація ───── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg);
+  padding: 10px 0 8px;
+  margin-bottom: 8px;
+}
+.search input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+}
+.search input:focus {
+  border-color: var(--link);
+}
+.chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-top: 8px;
+  scrollbar-width: none;
+}
+.chips::-webkit-scrollbar {
+  display: none;
+}
+.chip {
+  flex: none;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.88em;
+  color: var(--text);
+}
+.chip:hover {
+  text-decoration: none;
+  color: var(--link);
+}
+
+.no-results {
+  text-align: center;
+  color: var(--hint);
+  padding: 24px 0;
+}
+
+/* ───── Розділи ───── */
+.section {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-size: 1.25em;
+  margin: 0 0 10px;
+  color: var(--accent);
+}
+.section-title code {
+  font-size: 0.8em;
+}
+.section-lead {
+  margin: 0 0 14px;
+  color: var(--hint);
+}
+.sub-title {
+  font-size: 1.05em;
+  margin: 18px 0 8px;
+}
+
+.steps {
+  margin: 0;
+  padding-left: 22px;
+}
+.steps li {
+  margin-bottom: 8px;
+}
+
+.facts {
+  margin: 0;
+  padding-left: 18px;
+}
+.facts li {
+  margin-bottom: 6px;
+}
+.facts.compact li {
+  margin-bottom: 2px;
+}
+
+.hint {
+  color: var(--hint);
+  font-size: 0.9em;
+  margin: 6px 0 0;
+}
+
+/* ───── Формат часу ───── */
+.time-format {
+  margin-top: 14px;
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.time-format summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.time-format p {
+  margin: 8px 0;
+}
+.time-format table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.92em;
+}
+.time-format td {
+  padding: 4px 0;
+  vertical-align: top;
+  border-top: 1px solid var(--border);
+}
+.time-format td:first-child {
+  color: var(--hint);
+  padding-right: 10px;
+  white-space: nowrap;
+}
+.time-format td code {
+  margin: 0 2px 2px 0;
+  display: inline-block;
+}
+
+/* ───── Картки автомодерації ───── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+.card {
+  background: var(--surface-2);
+  border-radius: 12px;
+  padding: 12px;
+}
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card h3 {
+  font-size: 1em;
+  margin: 0 0 6px;
+}
+.card p {
+  margin: 0 0 6px;
+}
+.card-cmds {
+  font-size: 0.9em;
+}
+
+.badge {
+  flex: none;
+  font-size: 0.72em;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.badge.on {
+  color: var(--on);
+  background: color-mix(in srgb, var(--on) 14%, transparent);
+}
+.badge.off {
+  color: var(--off);
+  background: color-mix(in srgb, var(--off) 16%, transparent);
+}
+.badge.admin {
+  color: var(--accent);
+  background: var(--surface-2);
+}
+.badge.all {
+  color: var(--on);
+  background: color-mix(in srgb, var(--on) 14%, transparent);
+}
+.beta {
+  font-size: 0.7em;
+  font-weight: 600;
+  color: #e08a1e;
+  vertical-align: middle;
+}
+
+/* ───── Команди ───── */
+.cmd-group {
+  border-radius: 12px;
+  background: var(--surface-2);
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.cmd-group .cmd {
+  background: none;
+  border-radius: 0;
+  margin: 0;
+}
+.cmd-group .cmd + .cmd {
+  border-top: 1px solid var(--border);
+}
+.cmd {
+  padding: 11px 12px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+.cmd p {
+  margin: 4px 0 0;
+}
+.cmd-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.cmd-name {
+  font-weight: 700;
+  color: var(--link);
+  background: none;
+  padding: 0;
+  font-size: 0.98em;
+}
+.cmd-args {
+  color: var(--hint);
+  font-size: 0.86em;
+}
+.cmd-line .badge {
+  margin-left: auto;
+}
+.featured {
+  border: 1px solid color-mix(in srgb, var(--link) 35%, transparent);
+}
+.featured .facts {
+  margin-top: 8px;
+}
+.example {
+  font-size: 0.9em;
+}
+.alias {
+  color: var(--hint);
+  font-size: 0.85em;
+  font-style: italic;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.tags span {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.88em;
+}
+
+/* ───── Розкривні пункти ───── */
+.menu-list {
+  border-radius: 12px;
+  background: var(--surface-2);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.menu-item + .menu-item {
+  border-top: 1px solid var(--border);
+}
+.menu-item summary {
+  cursor: pointer;
+  padding: 12px;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.menu-item summary::-webkit-details-marker {
+  display: none;
+}
+.menu-item summary::after {
+  content: "›";
+  color: var(--hint);
+  transition: transform 0.15s;
+}
+.menu-item[open] summary::after {
+  transform: rotate(90deg);
+}
+.menu-item > :not(summary) {
+  margin: 0 12px 10px;
+}
+
+/* ───── Підвал ───── */
+.footer {
+  padding: 8px 0 24px;
+}
+
+@media (max-width: 420px) {
+  .hero-img {
+    width: 75%;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+    </style>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <!-- ───────────── Шапка ───────────── -->
+      <header class="hero">
+        <img src="media/aYq5cPc.png" alt="Маскот Filterbot" class="hero-img" />
+        <h1 class="hero-name">Filterbot</h1>
+        <p class="hero-tag">@uibanchik_bot</p>
+        <p class="hero-lead">
+          Автомодерація для українських чатів: чистить стікери, ґіфки, посилання,
+          слюр і москальську без Вашої участі — а ще вміє розважати.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="https://t.me/uibanchik_bot?startgroup=add"
+            >➕ Додати в чат</a
+          >
+          <a class="btn" href="https://t.me/Filterbot_info">📢 Новини</a>
+        </div>
+      </header>
+
+      <!-- ───────────── Навігація + пошук ───────────── -->
+      <nav class="nav" aria-label="Розділи">
+        <div class="search">
+          <input
+            id="search"
+            type="search"
+            placeholder="🔎 Пошук команди чи функції…"
+            autocomplete="off"
+          />
+        </div>
+        <div class="chips">
+          <a href="#start" class="chip">🚀 Старт</a>
+          <a href="#automod" class="chip">🛡️ Автомодерація</a>
+          <a href="#moderation" class="chip">👮‍♀️ Модерація</a>
+          <a href="#community" class="chip">💬 Чат</a>
+          <a href="#settings" class="chip">⚙️ Налаштування</a>
+          <a href="#fun" class="chip">🍷 Розваги</a>
+          <a href="#tools" class="chip">🧰 Інструменти</a>
+          <a href="#faq" class="chip">❓ FAQ</a>
+        </div>
+      </nav>
+
+      <p id="no-results" class="no-results" hidden>
+        Нічого не знайдено 🤷‍♀️ Спробуйте інше слово.
+      </p>
+
+      <!-- ───────────── Швидкий старт ───────────── -->
+      <section id="start" class="section">
+        <h2 class="section-title">🚀 Швидкий старт</h2>
+        <ol class="steps">
+          <li>
+            <b>Додайте бота в чат</b> — кнопкою
+            <a href="https://t.me/uibanchik_bot?startgroup=add">«Додати в чат»</a>.
+          </li>
+          <li>
+            <b>Зробіть її адміністраторкою.</b> Без прав бот не зможе видаляти
+            повідомлення, блокувати чи м'ютити. Потрібні права: видалення
+            повідомлень, блокування користувачів, закріплення повідомлень.
+          </li>
+          <li>
+            <b>Відкрийте <code>/settings</code></b> і налаштуйте потрібне. Більшість
+            базового захисту працює одразу.
+          </li>
+        </ol>
+
+        <h3 class="sub-title">Як писати команди</h3>
+        <ul class="facts">
+          <li>
+            Англійські команди пишуться через <code>/</code>:
+            <code>/ban</code>, <code>/mute</code>.
+          </li>
+          <li>
+            Українські аналоги — з префіксом <code>/</code>, <code>!</code> або
+            <code>.</code>: <code>!бан</code>, <code>.мут</code>. Деякі
+            працюють і без префікса: <code>мут</code>, <code>дел</code>,
+            <code>дрінк</code>.
+          </li>
+          <li>Регістр не має значення, команда має бути на початку повідомлення.</li>
+          <li>
+            <b>Ідентифікатор</b> користувача — це @теґ, ID або відповідь на його повідомлення.
+          </li>
+        </ul>
+
+        <details class="time-format">
+          <summary>⏱️ Формат часу (для бану, м'юту й налаштувань)</summary>
+          <p>Число + одиниця, разом, без пробілу: <code>30хв</code>, <code>2год</code>, <code>1d</code>, <code>2тиж</code>.</p>
+          <table>
+            <tr><td>Секунди</td><td><code>с</code> <code>сек</code> <code>s</code> <code>sec</code></td></tr>
+            <tr><td>Хвилини</td><td><code>х</code> <code>хв</code> <code>хвилин</code> <code>m</code> <code>min</code></td></tr>
+            <tr><td>Години</td><td><code>г</code> <code>год</code> <code>годин</code> <code>h</code> <code>hours</code></td></tr>
+            <tr><td>Дні</td><td><code>д</code> <code>день</code> <code>днів</code> <code>d</code> <code>days</code></td></tr>
+            <tr><td>Тижні</td><td><code>т</code> <code>тиж</code> <code>тижнів</code> <code>w</code> <code>weeks</code></td></tr>
+            <tr><td>Місяці / роки</td><td><code>міс</code> <code>mo</code> · <code>рік</code> <code>y</code></td></tr>
+          </table>
+          <p class="hint">Якщо час не вказати — покарання безстрокове.</p>
+        </details>
+      </section>
+
+      <!-- ───────────── Автомодерація ───────────── -->
+      <section id="automod" class="section">
+        <h2 class="section-title">🛡️ Автомодерація</h2>
+        <p class="section-lead">
+          Працює сама, щойно бот отримає права адміністратора. Адміністрацію
+          чату бот не модерує. Усе вмикається й вимикається в
+          <code>/settings → Автомодерація</code>. Мітка біля назви — стан за
+          замовчуванням.
+        </p>
+
+        <div class="grid">
+          <article class="card">
+            <div class="card-head">
+              <h3>🏷️ Стікери та емоджі</h3>
+              <span class="badge on">увімк.</span>
+            </div>
+            <p>
+              Видаляє стікери й кастомні емоджі з пакунків, у назвах яких є
+              москальщина, пропаганда чи спам. Замість них бот може
+              порадити українські альтернативи.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>🎞️ Ґіфки</h3>
+              <span class="badge on">увімк.</span>
+            </div>
+            <p>
+              Видаляє ґіфки з особистого списку Вашого чату.
+            </p>
+            <p class="card-cmds">
+              <code>/gblock</code> — заблокувати ґіф (реплаєм) ·
+              <code>/gunblock</code> — розблокувати ·
+              <code>/glist</code> — список
+            </p>
+            <p class="alias">Аналоги: ґбан, ґблок · ґанбан, ґанблок · ґліст, ґіф список</p>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>🤬 Слюр</h3>
+              <span class="badge on">увімк.</span>
+            </div>
+            <p>
+              Видаляє образливі слова, спрямовані на групи людей.
+              <a href="https://t.me/Slur_info/14">Що таке слюр?</a>
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>🚸 Педо-терміни</h3>
+              <span class="badge off">вимк.</span>
+            </div>
+            <p>
+              Видаляє терміни, що романтизують педофілію.
+              <a href="https://telegra.ph/about-ped0-terms-11-29">Детальніше</a>
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>🧂 Лайка</h3>
+              <span class="badge off">вимк.</span>
+            </div>
+            <p>Видаляє нецензурну лексику.</p>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>📢 Бан-ворди</h3>
+              <span class="badge on">увімк.</span>
+            </div>
+            <p>
+              Ключові слова спаму й реклами. Покарання на вибір: видалення, варн, м'ют
+              або бан — на заданий Вами час.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>🐷 Москальська <span class="beta">бета</span></h3>
+              <span class="badge off">вимк.</span>
+            </div>
+            <p>
+              Перевіряє повідомлення за словником московитської мови (1,4 млн
+              слів) і видаляє їх. Рідко але можливе хибне спрацювання — для цього існує кнопка "Помилкове спрацювання".
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>🔗 Посилання</h3>
+              <span class="badge off">вимк.</span>
+            </div>
+            <p>
+              Захист від спаму й фішингу. Можна блокувати всі посилання, лише
+              телеграм-посилання або лише приватні (запрошення в групи).
+              Покарання: видалення, варн, м'ют чи бан.
+            </p>
+            <p class="hint">
+              Є білий список. Підключений канал чату додається до нього
+              автоматично.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>🤖 Інлайн-боти</h3>
+            </div>
+            <p>
+              Видаляє повідомлення, надіслані через небажаних інлайн-ботів
+              (<code>@bot запит</code>). Список небажаних ботів веде адміністрація бота — здебільшого це кацапські боти.
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>😶‍🌫️ Приховані користувачі</h3>
+              <span class="badge off">вимк.</span>
+            </div>
+            <p>
+              Телеґрам Преміум дозволяє писати учасникам від імені свого каналу, через що не видно хто є автором повідомлення. Бот видаляє такі повідомлення й просить
+              писати від свого імені.
+            </p>
+            <p class="card-cmds">
+              <code>/free @канал</code> — дозволити канал ·
+              <code>/unfree @канал</code> — заборонити знову
+            </p>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <h3>🔠 Капча</h3>
+              <span class="badge off">вимк.</span>
+            </div>
+            <p>
+              Новачок отримує вікторину з простим прикладом і поки не
+              відповість — у м'юті. Правильна відповідь знімає м'ют, неправильна
+              або 3 хвилини без відповіді — кік.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ───────────── Модерація ───────────── -->
+      <section id="moderation" class="section">
+        <h2 class="section-title">👮‍♀️ Команди модерації</h2>
+        <p class="section-lead">
+          Доступні адміністрації та анонімним адмінам бота. Кожну команду можна
+          вимкнути в <code>/settings → Команди</code>.
+        </p>
+
+        <div class="cmd-group">
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/ban</code><span class="cmd-args">Ідентифікатор · [Час] · [Причина]</span></div>
+            <p>Блокує в чаті. З часом — тимчасово, без часу — назавжди. Реплаєм на повідомлення каналу блокує канал.</p>
+            <p class="example"><code>/ban @user 1w Спам</code></p>
+            <p class="alias">Аналоги: бан</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/unban</code><span class="cmd-args">Ідентифікатор</span></div>
+            <p>Розблоковує, людина знову зможе зайти.</p>
+            <p class="alias">Аналоги: анбан</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/kick</code><span class="cmd-args">Ідентифікатор · [Причина]</span></div>
+            <p>Вилучає з чату, але повернутись можна.</p>
+            <p class="alias">Аналоги: кік</p>
+          </article>
+        </div>
+
+        <div class="cmd-group">
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/mute</code><span class="cmd-args">Ідентифікатор · [Час] · [Причина]</span></div>
+            <p>Забороняє писати в чат. Без часу — назавжди.</p>
+            <p class="example"><code>мут @user 30хв флуд</code></p>
+            <p class="alias">Аналоги: мут, м'ют</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/unmute</code><span class="cmd-args">Ідентифікатор</span></div>
+            <p>Повертає право голосу.</p>
+            <p class="alias">Аналоги: анмут, анм'ют</p>
+          </article>
+        </div>
+
+        <div class="cmd-group">
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/warn</code><span class="cmd-args">Ідентифікатор · [Причина]</span></div>
+            <p>Видає попередження. На 3/3 — м'ют на 2 доби, лічильник скидається.</p>
+            <p class="alias">Аналоги: варн</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/rwarn</code><span class="cmd-args">Ідентифікатор</span></div>
+            <p>Знімає одне попередження.</p>
+            <p class="alias">Аналоги: анварн, рварн</p>
+          </article>
+        </div>
+
+        <div class="cmd-group">
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/del</code><span class="cmd-args">реплай · [Причина]</span></div>
+            <p>Видаляє повідомлення. Якщо вказати причину — бот її повідомить.</p>
+            <p class="alias">Аналоги: дел, д</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/md</code><span class="cmd-args">реплай</span></div>
+            <p>Масово видаляє все, починаючи з повідомлення, на яке Ви відповіли, і до кінця.</p>
+            <p class="alias">Аналоги: мд</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/delstart</code> + <code class="cmd-name">/delend</code><span class="cmd-args">реплай</span></div>
+            <p>Видаляє діапазон: позначте реплаєм перше повідомлення, потім останнє.</p>
+            <p class="alias">Аналоги: делстарт, дел1 · деленд, дел2</p>
+          </article>
+        </div>
+
+        <div class="cmd-group">
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/admin</code><span class="cmd-args">реплай</span></div>
+            <p>
+              Робить учасника анонімним адміністратором: він матиме доступ до
+              команд та функцій бота, але виглядатиме як звичайний учасник. Для використання функції бот повинна мати право
+              «Призначати адміністраторів».
+            </p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/unadmin</code><span class="cmd-args">реплай</span></div>
+            <p>Забирає статус анонімного адміністратора.</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ───────────── Чат і спільнота ───────────── -->
+      <section id="community" class="section">
+        <h2 class="section-title">💬 Для чату</h2>
+
+        <article class="cmd featured">
+          <div class="cmd-line"><code class="cmd-name">@everyone</code><span class="cmd-args">[Текст]</span><span class="badge admin">адмін</span></div>
+          <p>Відмічає всіх учасників чату з Вашим повідомленням.</p>
+          <ul class="facts">
+            <li>Лише для адміністрації та в чатах до 500 учасників.</li>
+            <li>Якщо відміток понад 20 — бот перепитає, чи продовжити.</li>
+            <li>
+              Телеґрам не дає ботам доступ до списку учасників, тому бот веде свій, записуючи ID користувачів до бази даних.
+              Зберігається лише ID, без імені й теґу; запис зникає, коли людина виходить із чату.
+            </li>
+            <li>
+              <b>Пасивний збір</b> — бот додає до списку кожного, хто пише чи
+              заходить. Без нього — лише тих, хто натиснув «Додати мене».
+            </li>
+            <li>
+              <code>/in</code> — додати себе, <code>/out</code> або
+              <code>Вийти з заклику</code> — більше не відмічати.
+            </li>
+          </ul>
+          <p class="alias">Аналоги: @all, @всі, @еверіван, заклик</p>
+        </article>
+
+        <div class="cmd-group">
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/report</code><span class="badge all">усі</span></div>
+            <p>Скликає адміністрацію. Відповідайте на повідомлення-порушення, щоб адміни одразу його побачили.</p>
+            <p class="alias">Аналоги: @admin, @адмін, @адміни, @адміністрація, /репорт</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/pin</code><span class="cmd-args">реплай</span></div>
+            <p>Закріплює повідомлення.</p>
+            <p class="alias">Аналоги: пін, закріпити</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/unpin</code><span class="cmd-args">[реплай]</span></div>
+            <p>Відкріплює обране або останнє закріплене повідомлення.</p>
+            <p class="alias">Аналоги: анпін</p>
+          </article>
+        </div>
+
+        <div class="cmd-group">
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/create</code><span class="cmd-args">реплай · Назва</span></div>
+            <p>
+              Створює власну команду чату: відповідайте на текст чи медіа, і за
+              назвою команди бот надсилатиме його.
+            </p>
+            <p class="example"><code>/create правила</code> → потім надішліть <code>правила</code></p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/remove</code><span class="cmd-args">Назва</span></div>
+            <p>Видаляє створену команду.</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/send</code><span class="cmd-args">Текст</span></div>
+            <p>Надсилає повідомлення від імені бота.</p>
+          </article>
+        </div>
+
+        <div class="cmd-group">
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/id</code><span class="cmd-args">[Ідентифікатор]</span><span class="badge all">усі</span></div>
+            <p>Інформація про користувача: ID, теґ, статус у чаті, кількість варнів.</p>
+            <p class="alias">Аналоги: info, ід, інфо</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/chat</code><span class="badge all">усі</span></div>
+            <p>Інформація про чат: назва, ID, теґ, ID гілки.</p>
+            <p class="alias">Аналоги: чінфо</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ───────────── Налаштування ───────────── -->
+      <section id="settings" class="section">
+        <h2 class="section-title">⚙️ Налаштування — <code>/settings</code></h2>
+        <p class="section-lead">
+          Меню з кнопками, доступне лише адміністрації. Ось що в ньому є:
+        </p>
+
+        <div class="menu-list">
+          <details class="menu-item">
+            <summary>👮‍♀️ Автомодерація</summary>
+            <p>
+              <b>📷 Контент:</b> стікери, емоджі, ґіф і окреме меню 🔗 посилань
+              (тип посилань, покарання, термін, білий список).<br />
+              <b>📝 Текст:</b> слюр, педо-терміни, лайка, бан-ворди,
+              москальська та покарання за порушення (видалення / варн / м'ют /
+              бан + термін від 30 с до 1 року).
+            </p>
+          </details>
+          <details class="menu-item">
+            <summary>👋 Привітання</summary>
+            <p>Повідомлення для кожного новачка: текст до 1024 символів, медіа (фото, відео, документ) і до 5 кнопок-посилань.</p>
+            <p><b>Теґи в тексті:</b></p>
+            <ul class="facts compact">
+              <li><code>{name}</code> <code>{lastname}</code> <code>{fullname}</code> — ім'я</li>
+              <li><code>{username}</code> <code>{userID}</code> — @теґ та ID</li>
+              <li><code>{MENTION}</code> — відмітка за нікнеймом</li>
+              <li><code>{chat}</code> <code>{chatUsername}</code> <code>{chatID}</code> — дані чату</li>
+            </ul>
+            <p><b>Формат кнопок</b> (кожна з нового рядка, <code>&amp;&amp;</code> — поруч):</p>
+            <pre>Правила | https://t.me/…
+Канал | https://t.me/… &amp;&amp; Бот | https://t.me/…</pre>
+          </details>
+          <details class="menu-item">
+            <summary>🔠 Капча</summary>
+            <p>Математична вікторина для новачків. Поки не пройдена — м'ют, провал або 3 хвилини без відповіді — кік.</p>
+          </details>
+          <details class="menu-item">
+            <summary>📝 Команди</summary>
+            <p>Вмикайте й вимикайте кожну команду окремо (/ban, /mute, /warn, /del, /pin, @everyone, /create…), а також РП-команди та міні-гру «Дрінк».</p>
+          </details>
+          <details class="menu-item">
+            <summary>📣 @everyone</summary>
+            <p>Увімкнення списку для заклику, пасивний збір, повторне надсилання закріпленого повідомлення з кнопками «Додати мене» / «Не додавати мене». Показує, скільки учасників уже в списку.</p>
+          </details>
+          <details class="menu-item">
+            <summary>💬 Чат коментарів</summary>
+            <p>
+              <b>Перший коментар</b> — бот залишає Ваш заготовлений текст (із
+              медіа й кнопками) під кожним новим постом каналу.<br />
+              <b>Автовідкріплення</b> — відкріплює пости каналу, які телеґрам
+              закріплює в чаті автоматично.
+            </p>
+          </details>
+          <details class="menu-item">
+            <summary>🧹 Службові повідомлення</summary>
+            <p>Видалення повідомлень, які телеґрам сам додає в чат. Кожен тип вмикається окремо, за замовчуванням усе вимкнено:</p>
+            <ul class="facts compact">
+              <li>вхід і вихід учасників;</li>
+              <li>закріплення повідомлень;</li>
+              <li>зміни чату — назва, фото, фон, таймер автовидалення;</li>
+              <li>відеочати — запланування, початок, кінець, запрошення;</li>
+              <li>бусти та розіграші.</li>
+            </ul>
+          </details>
+          <details class="menu-item">
+            <summary>😶‍🌫️ Приховані користувачі</summary>
+            <p>Блокування повідомлень, надісланих від імені каналів. Винятки — командою <code>/free @канал</code>.</p>
+          </details>
+          <details class="menu-item">
+            <summary>📢 Лоґ-канал</summary>
+            <p>Журнал подій: бот записуватиме в Ваш канал дії адміністрації та учасників. Додайте бота адміном у канал і перешліть боту будь-яке повідомлення звідти.</p>
+          </details>
+        </div>
+      </section>
+
+      <!-- ───────────── Розваги ───────────── -->
+      <section id="fun" class="section">
+        <h2 class="section-title">🍷 Розваги</h2>
+
+        <h3 class="sub-title">Міні-гра «Дрінк»</h3>
+        <p class="section-lead">
+          Пийте свій напій, збирайте літри й змагайтесь у топі. Після кожного
+          келиха — пауза від 40 хв до 2,5 год, а іноді наздоганяє похмілля 🥴
+        </p>
+        <div class="cmd-group">
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">Дрінк</code><span class="badge all">усі</span></div>
+            <p>Ще склянку! Від 0 до 16 літрів за раз.</p>
+            <p class="alias">Аналоги: /drink, випити, бухнути, хильнути, гильнути</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">Змінити напій</code></div>
+            <p>Обрати напій: чай, кава, вино, мохіто, какао, глінтвейн та інші.</p>
+            <p class="alias">Аналоги: /drink_choice, обрати / мій напій, змінити дрінк</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">Мі</code></div>
+            <p>Ваш профіль: напій, випиті літри, місце в топі.</p>
+            <p class="alias">Аналоги: /me, мій профіль</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">Топ 10</code></div>
+            <p>Загальний топ-10 пияк усіх чатів.</p>
+            <p class="alias">Аналоги: /top10, топ10</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/hide_me</code></div>
+            <p>Сховати себе з топу (або показати знову).</p>
+          </article>
+        </div>
+
+        <h3 class="sub-title">🫂 РП-команди</h3>
+        <article class="cmd">
+          <p>
+            Напишіть дію реплаєм на повідомлення або з @теґом — бот опише, що
+            Ви зробили з людиною. Понад 35 дій, зокрема:
+          </p>
+          <div class="tags">
+            <span>обійняти</span><span>поцілувати</span><span>погладити</span
+            ><span>вкусити</span><span>дати п'ять</span><span>кулачок</span
+            ><span>потанцювати</span><span>втішити</span><span>привітати</span
+            ><span>попити чаю</span><span>напоїти</span><span>покормити</span
+            ><span>похвалити</span><span>потиснути руку</span><span>мур</span
+            ><span>викинути в вікно</span><span>вдарити</span><span>…</span>
+          </div>
+          <p class="hint">Є й дії 18+. Вимкнути РП можна в <code>/settings → Команди</code>.</p>
+        </article>
+      </section>
+
+      <!-- ───────────── Інструменти ───────────── -->
+      <section id="tools" class="section">
+        <h2 class="section-title">🧰 Інструменти</h2>
+        <div class="cmd-group">
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">/gif</code><span class="cmd-args">реплай · [якість] [fps] [тривалість] [масштаб]</span><span class="badge all">усі</span></div>
+            <p>Робить ґіфку з відео, фото, кружечка, анімації чи стікера. Параметри необов'язкові — якщо файл завеликий, бот сам зменшить розмір.</p>
+            <p class="example"><code>/gif 80 15 10 0.8</code> — якість 80, 15 fps, 10 с, масштаб 0.8</p>
+          </article>
+          <article class="cmd">
+            <div class="cmd-line"><code class="cmd-name">Кружечок</code><span class="cmd-args">реплай на відео</span><span class="badge all">усі</span></div>
+            <p>Перетворює відео (або відео-документ) на відео-повідомлення.</p>
+            <p class="alias">Аналоги: /video, кружок, кружечок</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ───────────── FAQ ───────────── -->
+      <section id="faq" class="section">
+        <h2 class="section-title">❓ Часті питання</h2>
+        <div class="menu-list">
+          <details class="menu-item">
+            <summary>Бот не реагує на команди чи порушення</summary>
+            <p>Перевірте, що бот — адміністратор із правами видаляти повідомлення та блокувати користувачів, і що команда не вимкнена в <code>/settings → Команди</code>. Повідомлення адміністрації автомодерація не чіпає.</p>
+          </details>
+          <details class="menu-item">
+            <summary>Бот видалив мій стікер. Чому?</summary>
+            <p>У назві пакунка знайшлися заборонені слова (москальщина, пропаганда, спам). Скористайтесь українськими альтернативами, які пропонує бот. Вважаєте, що це помилка — напишіть у <a href="https://t.me/ekm_ryze_bot">підтримку</a>.</p>
+          </details>
+          <details class="menu-item">
+            <summary>Які дані бот зберігає?</summary>
+            <p>Налаштування чату, варни, статистику міні-гри. Для @everyone — лише ID учасників, які не відмовились; список видаляється, коли функцію вимкнено або бота прибрали з чату.</p>
+          </details>
+          <details class="menu-item">
+            <summary>Чи можна дати доступ до бота без прав адміна в самому чаті?</summary>
+            <p>Так — командою <code>/admin</code> реплаєм. Анонімний адмін керує ботом, але не отримує прав у самому чаті.</p>
+          </details>
+          <details class="menu-item">
+            <summary>Чи працює бот у звичайних групах?</summary>
+            <p>Бот розрахований на супергрупи. Телеґрам перетворить групу супергрупою автоматично, щойно вимкнете історію для нових учасників чи публічне посилання.</p>
+          </details>
+        </div>
+        <p class="section-lead">
+          Не знайшли відповідь чи маєте ідею? Пишіть у
+          <a href="https://t.me/ekm_ryze_bot">підтримку</a> — це допомагає робити
+          бота кращим. Дякую! ❤️‍🩹
+        </p>
+      </section>
+
+      <!-- ───────────── Інші боти ───────────── -->
+      <section class="section">
+        <h2 class="section-title">🆕 Інші боти</h2>
+        <article class="cmd">
+          <div class="cmd-line"><a class="cmd-name" href="https://t.me/UAQuote_bot">Цитатник | Quote creator</a></div>
+          <p>Робить стікер-цитати з Ваших повідомлень.</p>
+        </article>
+        <p class="hint">Міні-ігри — в розробці…</p>
+      </section>
+
+      <footer class="footer">
+        <a class="btn" href="https://t.me/Filterbot_info">📢 Новини бота</a>
+        <a class="btn" href="https://t.me/ekm_ryze_bot">🆘 Підтримка</a>
+        <a class="btn" href="https://t.me/drink_filterbot">🍷 Наш чат</a>
+      </footer>
+    </div>
+
+    <script>
+      (function () {
+        var tg = window.Telegram && window.Telegram.WebApp;
+        if (tg && tg.initData !== undefined) {
+          tg.ready();
+          tg.expand();
+          document.addEventListener("click", function (e) {
+            var a = e.target.closest("a[href^='https://t.me/']");
+            if (!a || !tg.openTelegramLink) return;
+            e.preventDefault();
+            tg.openTelegramLink(a.href);
+          });
+        }
+
+        var input = document.getElementById("search");
+        var empty = document.getElementById("no-results");
+        var items = document.querySelectorAll(".card, .cmd, .menu-item");
+        var sections = document.querySelectorAll(".section");
+
+        input.addEventListener("input", function () {
+          var q = input.value.trim().toLowerCase();
+          items.forEach(function (el) {
+            el.hidden = q !== "" && el.textContent.toLowerCase().indexOf(q) === -1;
+            if (q && !el.hidden && el.tagName === "DETAILS") el.open = true;
+          });
+          var any = false;
+          sections.forEach(function (s) {
+            var visible = s.querySelectorAll(".card:not([hidden]), .cmd:not([hidden]), .menu-item:not([hidden])").length;
+            s.hidden = q !== "" && visible === 0;
+            if (!s.hidden) any = true;
+          });
+          document.querySelectorAll(".cmd-group").forEach(function (g) {
+            g.hidden = q !== "" && !g.querySelector(".cmd:not([hidden])");
+          });
+          empty.hidden = any;
+        });
+      })();
+    </script>
+  </body>
+</html>
